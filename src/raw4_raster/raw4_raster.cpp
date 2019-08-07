@@ -297,9 +297,9 @@ int main() {
   // Shader program to use
   Program program{texture};
   // Set program uniforms
-  program.modelMatrix = orientate4(vec3{0,0.4,.8});
+  program.modelMatrix = orientate4(vec3{0.5,0.4,.8});
   program.viewMatrix = lookAt(vec3{0,.7,.7}, vec3{0,0,0}, vec3{.5, .5, 0});
-  program.projectionMatrix = perspective((PI / 180.f) * 60.0f, (float)image.width / (float)image.height, 1.0f, 15.0f);
+  program.projectionMatrix = perspective((PI / 180.f) * 60.0f, (float)image.width / (float)image.height, 1.0f, 25.0f);
 
   // Rasterizer instance
   Rasterizer rasterizer{image, program};
@@ -309,7 +309,7 @@ int main() {
     rasterizer.render(face);
 
   // Save the image
-  image::saveBMP(image, "raw4_raster.bmp");
+  image::saveBMP(image, "test.bmp");
 
   cout << "Done." << endl;
   return EXIT_SUCCESS;

@@ -29,15 +29,9 @@ private:
 
   // Mode switch
   enum class Mode {
-    IDENTITY,
-    SCALE,
-    SQUASH,
     ROTATE,
-    TRANSLATE,
-    ROTATE_TOP_RIGHT,
-    ROTATE_TOP_LEFT,
     END,
-  } mode = Mode::SCALE;
+  } mode = Mode::ROTATE;
 
   /*!
    * Generate transformation matrix
@@ -48,30 +42,6 @@ private:
     // Create transformation matrix
     // NOTE: glm matrices are declared column major !
     switch (mode) {
-      case Mode::IDENTITY:
-        return mat4({
-          1.0, 0.0, 0.0, 0.0,
-          0.0, 1.0, 0.0, 0.0,
-          0.0, 0.0, 1.0, 0.0,
-          0.0, 0.0, 0.0, 1.0,
-        });
-
-      case Mode::SCALE:
-        return mat4({
-          sin(time), 0.0, 0.0, 0.0,
-          0.0, sin(time), 0.0, 0.0,
-          0.0, 0.0, sin(time), 0.0,
-          0.0, 0.0, 0.0, 1.0,
-        });
-
-      case Mode::SQUASH:
-        return mat4({
-          sin(time), 0.0, 0.0, 0.0,
-          0.0, cos(time), 0.0, 0.0,
-          0.0, 0.0, 1.0, 0.0,
-          0.0, 0.0, 0.0, 1.0,
-        });
-
       case Mode::ROTATE:
         return mat4({
           cos(time), sin(time), 0.0, 0.0,
@@ -79,38 +49,6 @@ private:
           0.0, 0.0, 1.0, 0.0,
           0.0, 0.0, 0.0, 1.0,
         });
-
-      case Mode::TRANSLATE:
-        return mat4({
-          1.0, 0.0, 0.0, 0.0,
-          0.0, 1.0, 0.0, 0.0,
-          0.0, 0.0, 1.0, 0.0,
-          sin(time) / 2.0, cos(time) / 2.0, 0.0, 1.0,
-        });
-
-      case Mode::ROTATE_TOP_RIGHT:
-        return mat4({ // Move back
-          1.0, 0.0, 0.0, 0.0,
-          0.0, 1.0, 0.0, 0.0,
-          0.0, 0.0, 1.0, 0.0,
-          1.0, 1.0, 0.0, 1.0,
-        }) * mat4({ // Rotate
-          cos(time), sin(time), 0.0, 0.0,
-          -sin(time), cos(time), 0.0, 0.0,
-          0.0, 0.0, 1.0, 0.0,
-          0.0, 0.0, 0.0, 1.0,
-        }) * mat4({ // Move to origin
-          1.0, 0.0, 0.0, 0.0,
-          0.0, 1.0, 0.0, 0.0,
-          0.0, 0.0, 1.0, 0.0,
-          -1.0, -1.0, 0.0, 1.0,
-        });
-
-      case Mode::ROTATE_TOP_LEFT:
-        return translate(mat4{1.0f}, vec3{-1, 1, 0})
-               * rotate(mat4{1.0f}, time, vec3{0, 0, 1})
-               * glm::translate(mat4{1.0f}, -vec3{-1, 1, 0});
-
       default:
         break;
     }
