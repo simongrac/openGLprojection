@@ -1,5 +1,9 @@
 #include <glm/glm.hpp>
 #include <sstream>
+#include <ctime>
+
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 #include "mesh.h"
 
@@ -88,4 +92,31 @@ void Mesh::render() {
     glBindVertexArray(buffer.vao);
     glDrawElements(GL_TRIANGLES, buffer.size, GL_UNSIGNED_INT, nullptr);
   }
+}
+
+//GLfloat get_gl_depth(int x, int y){
+//    float depth_z = 0.0f;
+//
+//    glReadBuffer(GL_FRONT);
+//    glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth_z);
+//    return depth_z;
+//}
+
+void Mesh::renderAndMakeSnapshots(int width, int heigh, int spashotID) {
+    for(auto& buffer : buffers) {
+        // Draw object
+        glBindVertexArray(buffer.vao);
+        glDrawElements(GL_TRIANGLES, buffer.size, GL_UNSIGNED_INT, nullptr);
+
+        // make snapshot
+        cv::Mat img(width, heigh, CV_8UC3);
+        glPixelStorei(GL_PACK_ALIGNMENT, (img.step & 3)?1:4);
+        glPixelStorei(GL_PACK_ROW_LENGTH, img.step/img.elemSize());
+        glReadPixels(0, 0, img.cols, img.rows, GL_BGR_EXT, GL_UNSIGNED_BYTE, img.data);
+        cv::Mat flipped(img);
+        cv::flip(img, flipped, 0);
+        string filename = "/home/simon/openGLprojection/snapshots/snapshot" + to_string(spashotID) + ".png";
+        cv::imwrite(filename, img);
+        std::cout.precision(20);
+    }
 }

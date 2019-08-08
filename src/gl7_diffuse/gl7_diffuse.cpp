@@ -10,11 +10,15 @@
 #include <shaders/diffuse_vert_glsl.h>
 #include <shaders/diffuse_frag_glsl.h>
 
+//#include <opencv2/imgproc/imgproc.hpp>
+//#include <opencv2/highgui/highgui.hpp>
+
+
 using namespace std;
 using namespace glm;
 using namespace ppgso;
 
-const unsigned int SIZE = 512;
+const unsigned int SIZE = 800;
 
 // desired rotations and num. of rotation steps
 vector<vector<int>> rotations;
@@ -27,9 +31,10 @@ vector<int> view;
 class DiffuseWindow : public Window {
 private:
     Shader program = {diffuse_vert_glsl, diffuse_frag_glsl};
-    Texture texture = {image::loadBMP("missile.bmp")};
-    Mesh object = {"missile.obj"};
+    Texture texture = {image::loadBMP("duck.bmp")};
+    Mesh object = {"duck_scene_blender_triangulate.obj"};
 
+    int spashotID = 0;
     int rotationX = 0;
     int rotationY = 0;
     int rotationZ = 0;
@@ -43,7 +48,7 @@ public:
         program.setUniform("ProjectionMatrix", perspective((PI / 180.f) * 60.0f, 1.0f, 0.1f, 10.0f));
 
         // Set the light direction, assumes simple white directional light
-        program.setUniform("LightDirection", normalize(vec3{1.0f, -1.0f, 1.0f}));
+        program.setUniform("LightDirection", normalize(vec3{-1.0f, -1.0f, -1.0f}));
 
         // Set texture as program input
         program.setUniform("Texture", texture);
@@ -96,7 +101,7 @@ public:
      */
     void onIdle() override {
         // Set gray background
-        glClearColor(.5f, .5f, .5f, 0);
+        glClearColor(1.0f, 1.0f, 1.0f, 0);
 
         // Clear depth and color buffers
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -105,7 +110,7 @@ public:
         auto time = glfwGetTime();
 
         // Rotate camera according to view
-        auto cameraMat = translate(mat4{1.0f}, {0.0f, 0.0f, -2.0f});
+        auto cameraMat = translate(mat4{1.0f}, {0.0f, 0.0f, -0.2f});
         cameraMat = rotate(cameraMat, (float(view[0]) / 360.0f) * 2.0f * 3.14f, {1.0f, 0.0f, 0.0f});
         cameraMat = rotate(cameraMat, (float(view[1]) / 360.0f) * 2.0f * 3.14f, {0.0f, 1.0f, 0.0f});
         cameraMat = rotate(cameraMat, (float(view[2]) / 360.0f) * 2.0f * 3.14f, {0.0f, 0.0f, 1.0f});
@@ -133,7 +138,8 @@ public:
         program.setUniform("ModelMatrix", sphereMat);
 
         // Render object
-        object.render();
+        spashotID++;
+        object.renderAndMakeSnapshots(SIZE, SIZE, spashotID);
     }
 };
 
@@ -166,7 +172,7 @@ int main() {
     for (int i = 0; i < rotations.size(); i++) {
         view = rotations[i];
         window.pollEvents();
-        usleep(100000);
+        usleep(10000);
     }
 
     return EXIT_SUCCESS;

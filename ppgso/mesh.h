@@ -45,6 +45,12 @@ namespace ppgso {
      * Render the geometry associated with the mesh using glDrawElements.
      */
     void render();
+
+    /*!
+     * Render the geometry associated with the mesh using glDrawElements.
+     * Make snapshot.
+     */
+    void renderAndMakeSnapshots(int width, int heigh, int spashotID);
   };
 }
 

@@ -16,6 +16,16 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data)
 
+# Opencv Directory
+SET(OpenCV_DIR /home/simon/installation/OpenCV-3.4.4/share/OpenCV/)
+find_package(OpenCV REQUIRED)
+
+message(STATUS "OpenCV library status:")
+message(STATUS "    config: ${OpenCV_DIR}")
+message(STATUS "    version: ${OpenCV_VERSION}")
+message(STATUS "    libraries: ${OpenCV_LIBS}")
+message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
+
 # Use add_resources function to convert .glsl to a .cpp files which will be compiled into a separate static library
 include(add_resources)
 
@@ -86,7 +96,7 @@ add_library(ppgso STATIC
 target_compile_definitions(ppgso PUBLIC -DGLM_FORCE_RADIANS -DGLEW_STATIC)
 
 # Link to GLFW, GLEW and OpenGL
-target_link_libraries(ppgso PUBLIC ${GLFW_LIBRARIES} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
+target_link_libraries(ppgso PUBLIC ${GLFW_LIBRARIES} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} ${OpenCV_LIBS})
 # Pass on include directories
 target_include_directories(ppgso PUBLIC
         ppgso
@@ -95,7 +105,8 @@ target_include_directories(ppgso PUBLIC
         ${GLM_INCLUDE_DIRS}
         ${OPENGL_INCLUDE_DIRS}
         ${CMAKE_SOURCE_DIR}
-        ${CMAKE_CURRENT_BINARY_DIR})
+        ${CMAKE_CURRENT_BINARY_DIR}
+        ${OpenCV_LIBS})
 
 #
 # TARGETS
@@ -154,7 +165,9 @@ install(TARGETS gl6_mesh DESTINATION .)
 # gl7_diffuse
 add_executable(gl7_diffuse src/gl7_diffuse/gl7_diffuse.cpp)
 target_link_libraries(gl7_diffuse ppgso shaders)
-install(TARGETS gl7_diffuse DESTINATION .)
+#target_link_libraries(gl7_diffuse ppgso ${OpenCV_LIBS})
+
+install(TARGETS gl7_diffuse ppgso DESTINATION .)
 
 # gl8_framebuffer
 add_executable(gl8_framebuffer src/gl8_framebuffer/gl8_framebuffer.cpp)
