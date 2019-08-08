@@ -1,4 +1,5 @@
 #include <glm/glm.hpp>
+
 #include <sstream>
 #include <ctime>
 
@@ -94,22 +95,25 @@ void Mesh::render() {
   }
 }
 
-//GLfloat get_gl_depth(int x, int y){
-//    float depth_z = 0.0f;
+//void CopyDepthBuffer(GLuint texId, int x, int y, int imageWidth, int imageHeight)
+//{
+//    glBindTexture(GL_TEXTURE_2D, texId);
 //
-//    glReadBuffer(GL_FRONT);
-//    glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth_z);
-//    return depth_z;
+//    glReadBuffer(GL_BACK); // Ensure we are reading from the back buffer.
+//    glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, x, y, imageWidth, imageHeight, 0);
 //}
 
-void Mesh::renderAndMakeSnapshots(int width, int heigh, int spashotID) {
+void Mesh::renderAndMakeSnapshots(int width, int height, int spashotID) {
     for(auto& buffer : buffers) {
+
         // Draw object
-        glBindVertexArray(buffer.vao);
+        glBindVertexArray(buffer.tbo);
         glDrawElements(GL_TRIANGLES, buffer.size, GL_UNSIGNED_INT, nullptr);
 
-        // make snapshot
-        cv::Mat img(width, heigh, CV_8UC3);
+        // make and save snapshot
+
+        glReadBuffer(GL_BACK);
+        cv::Mat img(width, height, CV_8UC3);
         glPixelStorei(GL_PACK_ALIGNMENT, (img.step & 3)?1:4);
         glPixelStorei(GL_PACK_ROW_LENGTH, img.step/img.elemSize());
         glReadPixels(0, 0, img.cols, img.rows, GL_BGR_EXT, GL_UNSIGNED_BYTE, img.data);
@@ -117,6 +121,11 @@ void Mesh::renderAndMakeSnapshots(int width, int heigh, int spashotID) {
         cv::flip(img, flipped, 0);
         string filename = "/home/simon/openGLprojection/snapshots/snapshot" + to_string(spashotID) + ".png";
         cv::imwrite(filename, img);
-        std::cout.precision(20);
+
+        // TODO: DEPTH MAP
+        // http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
+        // http://glampert.com/2014/01-26/visualizing-the-depth-buffer/
+        // CopyDepthBuffer(buffer.tbo, 0, 0, width, height);
+
     }
 }
