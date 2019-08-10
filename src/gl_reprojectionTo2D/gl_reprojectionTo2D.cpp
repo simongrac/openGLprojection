@@ -107,13 +107,13 @@ public:
 
         // Render object depth map
         snapshotName = "depthMaps/depth_snap" + to_string(spashotID);;
-        object.render();
+        object.renderAndMakeSnapshots(SIZE, SIZE, snapshotName);
 
         // Set the matrix as model matrix for current program
         program.setUniform("ModelMatrix", sphereMat);
 
         snapshotName = "snapshots/snap" + to_string(spashotID);
-        object.render();
+        object.renderAndMakeSnapshots(SIZE, SIZE, snapshotName);
     }
 };
 
