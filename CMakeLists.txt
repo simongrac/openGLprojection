@@ -17,7 +17,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data)
 
 # Opencv Directory
-SET(OpenCV_DIR /home/simon/installation/OpenCV-3.4.4/share/OpenCV/)
+# SET(OpenCV_DIR /home/simon/installation/OpenCV-3.4.4/share/OpenCV/)
 find_package(OpenCV REQUIRED)
 
 message(STATUS "OpenCV library status:")

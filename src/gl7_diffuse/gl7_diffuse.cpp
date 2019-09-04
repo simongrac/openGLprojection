@@ -3,24 +3,28 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/random.hpp>
-#include <unistd.h>
-
 
 #include <ppgso/ppgso.h>
+#include <unistd.h>
 
 #include <shaders/diffuse_vert_glsl.h>
 #include <shaders/diffuse_frag_glsl.h>
-#include <shaders/depth_frag_glsl.h>
+
+//#include <opencv2/imgproc/imgproc.hpp>
+//#include <opencv2/highgui/highgui.hpp>
+
 
 using namespace std;
 using namespace glm;
 using namespace ppgso;
 
-const unsigned int SIZE = 800;
+const unsigned int SIZE = 500;
 
-
+// desired rotations and num. of rotation steps
 vector<vector<int>> rotations;
-int steps = 10;
+int stepsX = 20;
+int stepsY = 100;
+int stepsZ = 100;
 vector<int> view;
 
 /*!
@@ -29,16 +33,13 @@ vector<int> view;
 class DiffuseWindow : public Window {
 private:
     Shader program = {diffuse_vert_glsl, diffuse_frag_glsl};
-    Shader programDepth = {diffuse_vert_glsl, depth_frag_glsl};
     Texture texture = {image::loadBMP("duck.bmp")};
     Mesh object = {"duck_scene_blender_triangulate.obj"};
 
+    int spashotID = 0;
     int rotationX = 0;
     int rotationY = 0;
     int rotationZ = 0;
-
-    int spashotID = 0;
-
 
 public:
     /*!
@@ -47,16 +48,12 @@ public:
     DiffuseWindow() : Window{"gl7_diffuse", SIZE, SIZE} {
         // Set camera position with perspective projection
         program.setUniform("ProjectionMatrix", perspective((PI / 180.f) * 60.0f, 1.0f, 0.1f, 10.0f));
-        programDepth.setUniform("ProjectionMatrix", perspective((PI / 180.f) * 60.0f, 1.0f, 0.1f, 10.0f));
-
 
         // Set the light direction, assumes simple white directional light
         program.setUniform("LightDirection", normalize(vec3{-1.0f, -1.0f, -1.0f}));
-        programDepth.setUniform("LightDirection", normalize(vec3{-1.0f, -1.0f, -1.0f}));
 
         // Set texture as program input
         program.setUniform("Texture", texture);
-        programDepth.setUniform("Texture", texture);
 
         // Enable Z-buffer
         glEnable(GL_DEPTH_TEST);
@@ -78,23 +75,31 @@ public:
     void onKey(int key, int scanCode, int action, int mods) override {
         if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
             // Set new random light direction
-            program.setUniform("LightDirection", (vec3)sphericalRand(1.0));
-
+            program.setUniform("LightDirection", (vec3) sphericalRand(1.0));
         }
 
         if (action == GLFW_PRESS || action == GLFW_REPEAT) {
             switch (key) {
                 case GLFW_KEY_DOWN:
-                    rotationX = (rotationX - 1) % 360;
+                    rotationX = (rotationX - 5 + 360) % 360;
                     break;
                 case GLFW_KEY_UP:
-                    rotationX = (rotationX + 1) % 360;
-                    break;
-                case GLFW_KEY_LEFT:
-                    rotationY = (rotationY - 1) % 360;
+                    rotationX = (rotationX + 5 + 360) % 360;
                     break;
                 case GLFW_KEY_RIGHT:
-                    rotationY = (rotationY + 1) % 360;
+                    rotationY = (rotationY - 5 + 360) % 360;
+                    break;
+                case GLFW_KEY_LEFT:
+                    rotationY = (rotationY + 5 + 360) % 360;
+                    break;
+                case GLFW_KEY_N:
+                    rotationZ = (rotationZ - 5 + 360) % 360;
+                    break;
+                case GLFW_KEY_M:
+                    rotationZ = (rotationZ + 5 + 360) % 360;
+                    break;
+                case GLFW_KEY_C:
+                    cout << endl << "x:" << rotationX << " y:" << rotationY << " z:" << rotationZ << endl;
                     break;
                 default:
                     break;
@@ -107,7 +112,7 @@ public:
      */
     void onIdle() override {
         // Set gray background
-        glClearColor(.5f,.5f,.5f,0);
+        glClearColor(1.0f, 1.0f, 1.0f, 0);
 
         // Clear depth and color buffers
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -115,66 +120,74 @@ public:
         // Get time
         auto time = glfwGetTime();
 
-        // Create object matrix that rotates in time
-        //auto sphereMat = mat4{1.0f};
-
-        // Set camera position/rotation - for example, translate camera a bit backwards (positive value in Z axis), so we can see the objects
+        /*
+        // Rotate camera according to view
         auto cameraMat = translate(mat4{1.0f}, {0.0f, 0.0f, -0.2f});
-        cameraMat = rotate(cameraMat, (float(view[0]) / 360.0f) * 2.0f * 3.14f, {1.0f, 0.0f, 0.0f});
-        cameraMat = rotate(cameraMat, (float(view[1]) / 360.0f) * 2.0f * 3.14f, {0.0f, 1.0f, 0.0f});
-        cameraMat = rotate(cameraMat, (float(view[2]) / 360.0f) * 2.0f * 3.14f, {0.0f, 0.0f, 1.0f});
-
-
+        cameraMat = rotate(cameraMat, (float(view[0]) / 180.0f) * 3.14f, {1.0f, 0.0f, 0.0f});
+        cameraMat = rotate(cameraMat, (float(view[1]) / 180.0f) * 3.14f, {0.0f, 1.0f, 0.0f});
+        cameraMat = rotate(cameraMat, (float(view[2]) / 180.0f) * 3.14f, {0.0f, 0.0f, 1.0f});
         program.setUniform("ViewMatrix", cameraMat);
-        programDepth.setUniform("ViewMatrix", cameraMat);
+        */
+
+        // Rotate camera using buttons
+        // Set camera position/rotation - for example, translate camera a bit backwards (positive value in Z axis), so we can see the objects
+        auto cameraMat = translate(mat4{1.0f}, {0.0f, 0.0f, -0.5f});
+        cameraMat = rotate(cameraMat, (float(rotationX) / 180.0f) * 3.14f, {1.0f, 0.0f, 0.0f});
+        cameraMat = rotate(cameraMat, (float(rotationY) / 180.0f) * 3.14f, {0.0f, 1.0f, 0.0f});
+        cameraMat = rotate(cameraMat, (float(rotationZ) / 180.0f) * 3.14f, {0.0f, 0.0f, 1.0f});
+
+        // Set the matrix that rotates camera
+        program.setUniform("ViewMatrix", cameraMat);
+
+
+        // Create object matrix that rotates in time
+        auto sphereMat = mat4{1.0f};
+        //sphereMat = rotate(sphereMat, float(rotationX) / 10.0f, {1.0f, 0.0f, 0.0f});
+        //sphereMat = rotate(sphereMat, float(rotationY) / 10.0f, {0.0f, 1.0f, 0.0f});
+        //sphereMat = rotate(sphereMat, float(rotationZ) / 10.0f, {0.0f, 0.0f, 1.0f});
 
         // Set the matrix as model matrix for current program
-
-        // Create object matrix
-        auto sphereMat = mat4{1.0f};
-        //sphereMat = rotate(sphereMat, (float(view[0]) / 360.0f) * 2.0f * 3.14f, {1.0f, 0.0f, 0.0f});
-        //sphereMat = rotate(sphereMat, (float(view[1]) / 360.0f) * 2.0f * 3.14f, {0.0f, 1.0f, 0.0f});
-        //sphereMat = rotate(sphereMat, (float(view[2]) / 360.0f) * 2.0f * 3.14f, {0.0f, 0.0f, 1.0f});
-
         program.setUniform("ModelMatrix", sphereMat);
-        spashotID++;
-        std::string snapshotName = "depthMaps/depth_snap" + to_string(spashotID);;
+
         // Render object
-        object.renderAndMakeSnapshots(SIZE, SIZE, snapshotName);
-
-        programDepth.setUniform("ModelMatrix", sphereMat);
-        snapshotName = "snapshots/snap" + to_string(spashotID);
-
-        object.renderAndMakeSnapshots(SIZE, SIZE, snapshotName);
-
+        spashotID++;
+        object.renderAndMakeSnapshots(SIZE, SIZE, spashotID);
     }
 };
 
 void generateRotationCombinations() {
-    int stepSize = int(360 / steps);
+    int stepSizeX = int(360 / stepsX);
+    int stepSizeY = int(360 / stepsY);
+    int stepSizeZ = int(360 / stepsZ);
 
-    for (int x = 0; x < 360; x += stepSize) {
-        for (int y = 0; y < 360; y += stepSize) {
-            for (int z = 0; z < 360; z += stepSize) {
-                vector<int> point = {x, y, z};
+    for (int x = 180; x >= 0; x -= stepSizeX) {
+        //for (int y = 0; y < 360; y += stepSizeY) {
+            for (int z = 0; z < 360; z += stepSizeZ) {
+                vector<int> point = {x, 0, z};
                 rotations.emplace_back(point);
-            }
+        //    }
         }
     }
 }
 
 int main() {
-// Create a window with OpenGL 3.3 enabled
+    // Create a window with OpenGL 3.3 enabled
     DiffuseWindow window;
 
     // Generate rotation combinations matrix
-    generateRotationCombinations();
+     generateRotationCombinations();
+
+     cout << rotations.size();
+
+    // Main execution loop
+    while (window.pollEvents()) {}
 
     // Rotate for every rotation point
     for (int i = 0; i < rotations.size(); i++) {
         view = rotations[i];
         window.pollEvents();
-        usleep(100000);
+        usleep(10000);
     }
+
     return EXIT_SUCCESS;
 }
